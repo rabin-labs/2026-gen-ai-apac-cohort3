@@ -45,3 +45,7 @@ The included `Dockerfile` builds a non-root production image. Deployment instruc
 ## Challenge evidence
 
 The submission should demonstrate two separately authenticated users and an attempted cross-user document read that is rejected. See [docs/DEMO.md](docs/DEMO.md).
+
+## Hackathon
+
+#AccelerateAIwithCloudRun #Gemini #Firebase #GoogleCloud #CloudRun #BuildWithAI #Hackathon
