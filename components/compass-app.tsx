@@ -1,7 +1,7 @@
 "use client";
 
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { getFirebaseClient } from "@/lib/firebase-client";
 import type { ChatMessage, DecisionSnapshot } from "@/lib/schemas";
 
@@ -66,6 +66,13 @@ export function CompassApp() {
       if (result.readyForSnapshot && result.snapshot) setSnapshot(result.snapshot);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Private Compass is unavailable."); }
     finally { setBusy(false); }
+  }
+
+  function submitOnEnter(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
   }
 
   async function login() {
@@ -136,7 +143,7 @@ export function CompassApp() {
             <div className="modes">{(["explore","decide","reflect","replay"] as Mode[]).map(item => <button key={item} className={`mode ${mode===item?"selected":""}`} onClick={() => setMode(item)}>{item[0].toUpperCase()+item.slice(1)}</button>)}</div>
             {error && <div className="error" role="alert">{error}</div>}
             <div className="messages" aria-live="polite">{messages.map((message,index) => <div key={index} className={`bubble ${message.role}`}>{message.content}</div>)}{busy && <div className="bubble assistant skeleton">Thinking with care…</div>}<div ref={bottom}/></div>
-            <form className="composer" onSubmit={send}><textarea aria-label="Your reflection" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={8000} placeholder="Share what you are deciding…"/><button className="primary" disabled={busy || !draft.trim()}>Send</button></form>
+            <form className="composer" onSubmit={send}><textarea aria-label="Your reflection" value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={submitOnEnter} maxLength={8000} placeholder="Share what you are deciding…"/><button className="primary" disabled={busy || !draft.trim()}>Send</button></form>
           </section>
           <aside className="side-stack">
             <section className="card snapshot">
