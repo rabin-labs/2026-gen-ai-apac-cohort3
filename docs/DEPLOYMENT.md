@@ -27,3 +27,7 @@ Do not use the default broad Compute Engine service account for the running serv
 - Create log-based alerts using metadata only.
 - Complete data export, account deletion, privacy notice, and retention policy.
 - Run dependency, container, and secret scans in CI.
+
+## Cloud Build
+
+`cloudbuild.yaml` passes only the public Firebase web configuration into the Next.js build. The Gemini API key is deliberately absent: the running container retrieves it from Secret Manager using its attached service account.
