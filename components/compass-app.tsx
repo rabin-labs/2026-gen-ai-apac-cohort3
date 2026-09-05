@@ -37,21 +37,27 @@ export function CompassApp() {
   const bottom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let unsubscribe = () => {};
     try {
       const { auth } = getFirebaseClient();
-      return onAuthStateChanged(auth, async (next) => {
-        setUser(next); setChecking(false);
+      unsubscribe = onAuthStateChanged(auth, (next) => {
+        setUser(next);
+        setChecking(false);
         if (next) {
-          try { setSaved((await api<{ decisions: SavedDecision[] }>(next, "/api/decisions")).decisions); }
-          catch { setError("Your journal history could not be loaded."); }
+          void api<{ decisions: SavedDecision[] }>(next, "/api/decisions")
+            .then(result => setSaved(result.decisions))
+            .catch(() => setError("Your journal history could not be loaded."));
         }
       });
     } catch (cause) {
       setChecking(false);
       setError(cause instanceof Error ? cause.message : "Firebase is not configured.");
     }
+    return () => { unsubscribe(); };
   }, []);
-  useEffect(() => bottom.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   async function send(event: FormEvent) {
     event.preventDefault();
