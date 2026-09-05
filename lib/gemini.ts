@@ -17,34 +17,11 @@ export async function continueConversation(mode: string, messages: ChatMessage[]
   const transcript = messages.map(({ role, content }) => `${role.toUpperCase()}: ${content}`).join("\n\n");
   const prompt = `${constitution}\n\nMODE: ${mode}\n\nCONVERSATION:\n${transcript}`;
   const response = await ai.models.generateContent({
-    model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+    model: process.env.GEMINI_MODEL ?? "gemini-3.8-flash",
     contents: prompt,
     config: {
       temperature: 0.45,
-      responseMimeType: "application/json",
-      responseJsonSchema: {
-        type: "object",
-        required: ["reply", "readyForSnapshot", "snapshot"],
-        properties: {
-          reply: { type: "string" },
-          readyForSnapshot: { type: "boolean" },
-          snapshot: {
-            anyOf: [
-              { type: "null" },
-              { type: "object", required: ["title","decision","options","priorities","assumptions","risks","expectedOutcome","confidence","reviewDate","sensitive"], properties: {
-                title: { type: "string" }, decision: { type: "string" },
-                options: { type: "array", items: { type: "string" } },
-                priorities: { type: "array", items: { type: "string" } },
-                assumptions: { type: "array", items: { type: "string" } },
-                risks: { type: "array", items: { type: "string" } },
-                expectedOutcome: { type: "string" }, confidence: { type: "integer" },
-                reviewDate: { anyOf: [{ type: "string" }, { type: "null" }] },
-                sensitive: { type: "boolean" }
-              }}
-            ]
-          }
-        }
-      }
+      responseMimeType: "application/json"
     }
   });
   return modelResponseSchema.parse(JSON.parse(response.text ?? "{}"));
