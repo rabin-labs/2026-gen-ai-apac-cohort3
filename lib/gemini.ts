@@ -16,13 +16,27 @@ export async function continueConversation(mode: string, messages: ChatMessage[]
   const ai = new GoogleGenAI({ apiKey });
   const transcript = messages.map(({ role, content }) => `${role.toUpperCase()}: ${content}`).join("\n\n");
   const prompt = `${constitution}\n\nMODE: ${mode}\n\nCONVERSATION:\n${transcript}`;
-  const response = await ai.models.generateContent({
-    model: process.env.GEMINI_MODEL ?? "gemini-3.8-flash",
-    contents: prompt,
-    config: {
-      temperature: 0.45,
-      responseMimeType: "application/json"
+  const preferredModel = process.env.GEMINI_MODEL ?? "gemini-3.8-flash";
+  const fallbacks = [preferredModel, "gemini-3.6-flash"]
+    .filter((model, index, models) => models.indexOf(model) === index);
+  let response: Awaited<ReturnType<typeof ai.models.generateContent>> | undefined;
+  let lastError: unknown;
+
+  for (const model of fallbacks) {
+    try {
+      response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: { temperature: 0.45, responseMimeType: "application/json" }
+      });
+      break;
+    } catch (error) {
+      lastError = error;
+      const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
+      if (status !== 503) throw error;
     }
-  });
+  }
+
+  if (!response) throw lastError;
   return modelResponseSchema.parse(JSON.parse(response.text ?? "{}"));
 }
