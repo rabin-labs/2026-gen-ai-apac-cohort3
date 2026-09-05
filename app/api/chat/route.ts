@@ -19,9 +19,19 @@ export async function POST(request: NextRequest) {
     if (error instanceof SyntaxError) return NextResponse.json({ error: "Invalid request.", code: "INVALID_REQUEST" }, { status: 400 });
     if (error instanceof ZodError) {
       const isModelOutput = error.issues.some(issue => issue.path[0] === "reply" || issue.path[0] === "snapshot" || issue.path[0] === "readyForSnapshot");
+      const validationIssues = error.issues.map(issue => ({
+        path: issue.path.join("."),
+        code: issue.code,
+        message: issue.message
+      }));
+      console.error("chat_validation_failed", {
+        code: isModelOutput ? "MODEL_RESPONSE_INVALID" : "INVALID_REQUEST",
+        issues: validationIssues
+      });
       return NextResponse.json({
         error: isModelOutput ? "Gemini returned an unexpected response. Please try again." : "Invalid request.",
-        code: isModelOutput ? "MODEL_RESPONSE_INVALID" : "INVALID_REQUEST"
+        code: isModelOutput ? "MODEL_RESPONSE_INVALID" : "INVALID_REQUEST",
+        ...(process.env.NODE_ENV === "development" ? { validationIssues } : {})
       }, { status: isModelOutput ? 502 : 400 });
     }
     const message = error instanceof Error ? error.message : "";
