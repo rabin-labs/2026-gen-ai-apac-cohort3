@@ -68,6 +68,21 @@ export function CompassApp() {
     finally { setBusy(false); }
   }
 
+  async function login() {
+    setError("");
+    try {
+      const { auth, provider } = getFirebaseClient();
+      await signInWithPopup(auth, provider);
+    } catch (cause) {
+      const code = cause && typeof cause === "object" && "code" in cause ? String(cause.code) : "";
+      setError(code === "auth/unauthorized-domain"
+        ? "This address is not authorized in Firebase Authentication. Add localhost under Authorized domains."
+        : code === "auth/popup-blocked"
+          ? "Your browser blocked the Google sign-in popup. Allow popups for localhost and try again."
+          : "Google sign-in did not complete. Please try again.");
+    }
+  }
+
   async function saveSnapshot() {
     if (!user || !snapshot) return;
     setBusy(true); setError("");
@@ -93,7 +108,8 @@ export function CompassApp() {
         <div className="login-action">
           <h2>Your journal belongs to you.</h2>
           <p>Every record is isolated to your account. Your identity is verified on the server before any journal data is read or written.</p>
-          <button className="google" onClick={() => { const { auth, provider } = getFirebaseClient(); return signInWithPopup(auth, provider); }}>Continue with Google</button>
+          {error && <div className="error" role="alert" style={{margin:"16px 0 0"}}>{error}</div>}
+          <button className="google" onClick={login}>Continue with Google</button>
           <span className="notice">Private by default · Export or delete anytime</span>
         </div>
       </section>
