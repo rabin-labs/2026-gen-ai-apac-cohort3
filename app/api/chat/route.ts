@@ -26,14 +26,27 @@ export async function POST(request: NextRequest) {
     }
     const message = error instanceof Error ? error.message : "";
     const normalized = message.toLowerCase();
+    const providerStatus = error && typeof error === "object" && "status" in error ? String(error.status) : "unknown";
+    const safeProviderMessage = message
+      .replace(/AIza[0-9A-Za-z_-]+/g, "[redacted-api-key]")
+      .replace(/[\r\n]+/g, " ")
+      .slice(0, 600);
     const diagnostic = normalized.includes("secret") || normalized.includes("credential") || normalized.includes("permission_denied")
       ? { error: "The server could not access Gemini credentials in Secret Manager.", code: "SECRET_ACCESS_FAILED" }
       : normalized.includes("api key") || normalized.includes("api_key") || normalized.includes("generative language")
         ? { error: "The Gemini API rejected the configured API key or its API restrictions.", code: "GEMINI_KEY_REJECTED" }
-        : normalized.includes("model") || normalized.includes("404")
+        : providerStatus === "404" || normalized.includes("not found") || normalized.includes("no longer available")
           ? { error: "The configured Gemini model is unavailable to this project.", code: "GEMINI_MODEL_UNAVAILABLE" }
           : { error: "The conversation service is temporarily unavailable.", code: "CONVERSATION_FAILED" };
-    console.error("chat_request_failed", { errorType: error instanceof Error ? error.name : "unknown", code: diagnostic.code });
-    return NextResponse.json(diagnostic, { status: 503 });
+    console.error("chat_request_failed", {
+      errorType: error instanceof Error ? error.name : "unknown",
+      code: diagnostic.code,
+      providerStatus,
+      providerMessage: safeProviderMessage
+    });
+    return NextResponse.json({
+      ...diagnostic,
+      ...(process.env.NODE_ENV === "development" ? { providerStatus, providerMessage: safeProviderMessage } : {})
+    }, { status: 503 });
   }
 }
