@@ -209,6 +209,26 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+npm-debug.log*
+
+# Local configuration and credentials
+.env*.local
+firebase-debug.log*
+firestore-debug.log*
+service-account*.json
+*.pem
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
