@@ -2,6 +2,10 @@
 
 Private Compass is a secure, Gemini-powered decision journal for working adults. It turns a guided conversation into an editable decision snapshot, then helps the user revisit expectations and outcomes through **Decision Replay**.
 
+## Live application
+
+[Launch Private Compass on Cloud Run](https://private-compass-133701402785.asia-southeast1.run.app)
+
 ## Security-first design
 
 - Firebase Authentication establishes identity.
